@@ -1,14 +1,16 @@
-import {TokenType} from './token-type'
+import { TokenType } from "./token-type"
+
+export type Literal = object | null
 
 export class Token {
-  constructor (
+  constructor(
     readonly type: TokenType,
     readonly lexeme: string,
-    readonly literal: object | null,
+    readonly literal: Literal,
     readonly line: number
   ) {}
 
-  toString (): string {
-    return `${this.type} ${this.lexeme} ${this.literal}`
+  toString(): string {
+    return `${TokenType[this.type]} ${this.lexeme} ${this.literal}`
   }
 }
