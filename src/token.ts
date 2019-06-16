@@ -1,6 +1,6 @@
 import { TokenType } from "./token-type"
 
-export type Literal = number | string | null
+export type Literal = number | string | boolean | null
 
 export class Token {
   constructor(

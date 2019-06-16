@@ -1,6 +1,10 @@
 import * as Expr from "./expr"
 
 export class AstPrinter implements Expr.Visitor<string> {
+  static print (expr: Expr.Expr): string {
+    return new AstPrinter().print(expr)
+  }
+
   print(expr: Expr.Expr): string {
     return expr.accept(this)
   }

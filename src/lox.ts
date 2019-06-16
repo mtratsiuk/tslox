@@ -2,6 +2,8 @@ import * as fs from "fs"
 import * as readline from "readline"
 
 import { Scanner } from "./scanner"
+import { Parser } from './parser'
+import { AstPrinter } from './ast-printer'
 
 export function main(args: Array<string>): void {
   const filePath = args[2]
@@ -49,11 +51,21 @@ function run(source: string): boolean {
 
   if (errors.length > 0) {
     errors.forEach(({ line, message }) => report(line, "", message))
+    return false
   }
 
-  console.log(tokens.join("\n"))
+  let expr
 
-  return errors.length === 0
+  try {
+    expr = Parser.parse(tokens)
+  } catch (error) {
+    console.log(error)
+    return false
+  }
+
+  console.log(expr)
+  console.log(AstPrinter.print(expr))
+  return true
 }
 
 function report(line: number, where: string, message: string): void {
