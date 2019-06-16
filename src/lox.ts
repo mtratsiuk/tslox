@@ -3,8 +3,6 @@ import * as readline from "readline"
 
 import { Scanner } from "./scanner"
 
-let hadError = false
-
 export function main(args: Array<string>): void {
   const filePath = args[2]
 
@@ -22,9 +20,7 @@ function runFile(filePath: string): void {
       process.exit(1)
     }
 
-    run(source)
-
-    if (hadError) {
+    if (!run(source)) {
       process.exit(65)
     }
   })
@@ -42,23 +38,22 @@ function runPrompt(): void {
   rl.on("line", line => {
     run(line.trim())
 
-    hadError = false
-
     rl.prompt()
   }).on("close", () => {
     process.exit(0)
   })
 }
 
-function run(source: string): void {
-  const scanner = new Scanner(source)
-  const tokens = scanner.scanTokens()
+function run(source: string): boolean {
+  const [tokens, errors] = Scanner.scan(source)
+
+  if (errors.length > 0) {
+    errors.forEach(({ line, message }) => report(line, "", message))
+  }
 
   console.log(tokens.join("\n"))
-}
 
-export function error(line: number, message: string) {
-  report(line, "", message)
+  return errors.length === 0
 }
 
 function report(line: number, where: string, message: string): void {

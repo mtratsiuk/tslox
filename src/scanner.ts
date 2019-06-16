@@ -1,8 +1,12 @@
 import { Token, Literal } from "./token"
 import { TokenType } from "./token-type"
-import { error } from "./lox"
 
-const keywords: { [key: string]: TokenType } = {
+export interface ScanError {
+  line: number,
+  message: string
+}
+
+const keywords: Record<string, TokenType> = {
   and: TokenType.AND,
   class: TokenType.CLASS,
   else: TokenType.ELSE,
@@ -24,6 +28,7 @@ const keywords: { [key: string]: TokenType } = {
 export class Scanner {
   private readonly source: string
   private readonly tokens: Array<Token> = []
+  private readonly errors: Array<ScanError> = []
 
   private start: number = 0
   private current: number = 0
@@ -33,14 +38,19 @@ export class Scanner {
     this.source = source
   }
 
-  scanTokens(): Array<Token> {
+  static scan(source: string): [Array<Token>, Array<ScanError>] {
+    return new Scanner(source).scanTokens()
+  }
+
+  scanTokens(): [Array<Token>, Array<ScanError>] {
     while (!this.isAtEnd()) {
       this.start = this.current
       this.scanToken()
     }
 
     this.tokens.push(new Token(TokenType.EOF, "", null, this.line))
-    return this.tokens
+
+    return [this.tokens, this.errors]
   }
 
   private scanToken(): void {
@@ -104,7 +114,7 @@ export class Scanner {
           }
 
           if (this.isAtEnd()) {
-            error(this.line, 'Unterminated multiline comment')
+            this.error(this.line, 'Unterminated multiline comment')
           } else {
             this.advance()
             this.advance()
@@ -133,7 +143,7 @@ export class Scanner {
         } else if (this.isAlpha(c)) {
           this.scanIdentifier()
         } else {
-          error(this.line, `Unexpected character "${c}"`)
+          this.error(this.line, `Unexpected character "${c}"`)
         }
     }
   }
@@ -148,7 +158,7 @@ export class Scanner {
     }
 
     if (this.isAtEnd()) {
-      error(this.line, "Unterminated string")
+      this.error(this.line, "Unterminated string")
       return
     }
 
@@ -220,6 +230,10 @@ export class Scanner {
     const text = this.source.slice(this.start, this.current)
 
     this.tokens.push(new Token(type, text, literal, this.line))
+  }
+
+  private error(line: number, message: string): void {
+    this.errors.push({ line, message })
   }
 
   private isAtEnd(): boolean {
