@@ -47,25 +47,27 @@ function runPrompt(): void {
 }
 
 function run(source: string): boolean {
-  const [tokens, errors] = Scanner.scan(source)
-
-  if (errors.length > 0) {
-    errors.forEach(({ line, message }) => report(line, "", message))
-    return false
-  }
-
-  let expr
-
-  try {
-    expr = Parser.parse(tokens)
-  } catch (error) {
-    console.log(error)
-    return false
-  }
-
-  console.log(expr)
-  console.log(AstPrinter.print(expr))
-  return true
+  return Scanner.scan(source)
+    .match({
+      ok: tokens => {
+        return Parser.parse(tokens)
+          .match({
+            ok: expr => {
+              console.log(expr)
+              console.log(AstPrinter.print(expr))
+              return true
+            },
+            fail: errors => {
+              errors.forEach(({ token, message }) => report(token.line, `at "${token.lexeme}"`, message))
+              return false
+            }
+          })
+      },
+      fail: errors => {
+        errors.forEach(({ line, message }) => report(line, "", message))
+        return false
+      }
+    })
 }
 
 function report(line: number, where: string, message: string): void {

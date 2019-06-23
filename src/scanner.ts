@@ -1,5 +1,6 @@
 import { Token, Literal } from "./token"
 import { TokenType } from "./token-type"
+import { Result } from './common'
 
 export interface ScanError {
   line: number,
@@ -38,11 +39,11 @@ export class Scanner {
     this.source = source
   }
 
-  static scan(source: string): [Token[], ScanError[]] {
+  static scan(source: string) {
     return new Scanner(source).scanTokens()
   }
-
-  scanTokens(): [Token[], ScanError[]] {
+  
+  scanTokens(): Result<Token[], ScanError[]> {
     while (!this.isAtEnd()) {
       this.start = this.current
       this.scanToken()
@@ -50,7 +51,11 @@ export class Scanner {
 
     this.tokens.push(new Token(TokenType.EOF, "", null, this.line))
 
-    return [this.tokens, this.errors]
+    if (this.errors.length === 0) {
+      return Result.Ok(this.tokens)
+    }
+
+    return Result.Fail(this.errors)
   }
 
   private scanToken(): void {

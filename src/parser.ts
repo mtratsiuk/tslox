@@ -1,10 +1,18 @@
 import { Token } from './token'
 import { TokenType } from './token-type'
+import { Result } from './common'
 import * as Expr from './expr'
+
+export class ParseError extends Error {
+    constructor(public token: Token, public message: string) {
+        super(message)
+    }
+}
 
 export class Parser {
     private tokens: Token[]
     private current: number = 0
+    private errors: ParseError[] = []
 
     constructor(tokens: Token[]) {
         if (tokens.length === 0) {
@@ -14,12 +22,28 @@ export class Parser {
         this.tokens = tokens
     }
 
-    static parse(tokens: Token[]): Expr.Expr {
+    static parse(tokens: Token[]) {
         return new Parser(tokens).parse()
     }
 
-    parse(): Expr.Expr {
-        return this.expression()
+    parse(): Result<Expr.Expr, ParseError[]> {
+        let expr
+
+        while (!this.isAtEnd()) {
+            try {
+                expr = this.expression()
+            } catch (error) {
+                this.errors.push(error)
+                // this.sync
+                this.current = this.tokens.length - 1
+            }
+        }
+
+        if (expr && this.errors.length === 0) {
+            return Result.Ok(expr)
+        }
+
+        return Result.Fail(this.errors)
     }
 
     private binary = (operation: () => Expr.Expr, ...types: TokenType[]) => () => {
@@ -44,7 +68,7 @@ export class Parser {
             return new Expr.Literal(this.previous().literal)
         }
 
-        this.consume(TokenType.LEFT_PAREN, 'Unexpected token')
+        this.consume(TokenType.LEFT_PAREN, 'Expected expression')
         const expr = this.expression()
         this.consume(TokenType.RIGHT_PAREN, 'Expected ")" after expression')
 
@@ -94,7 +118,7 @@ export class Parser {
             return this.advance()
         }
 
-        throw new Error(message)
+        throw new ParseError(this.peek(), message)
     }
 
     private match(...types: TokenType[]): boolean {
