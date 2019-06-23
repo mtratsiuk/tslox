@@ -2,7 +2,7 @@ import * as fs from 'fs'
 
 main(process.argv)
 
-function main(args: Array<string>): void {
+function main(args: string[]): void {
   fs.writeFile(args[2], defineAst(), error => {
     if (error) {
       console.log(error)

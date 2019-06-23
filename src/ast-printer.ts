@@ -9,7 +9,7 @@ export class AstPrinter implements Expr.Visitor<string> {
     return expr.accept(this)
   }
 
-  private parenthesize(name: string, ...exprs: Array<Expr.Expr>): string {
+  private parenthesize(name: string, ...exprs: Expr.Expr[]): string {
     return exprs.reduce((str, expr) => str + " " + expr.accept(this), "(" + name) + ')'
   }
 

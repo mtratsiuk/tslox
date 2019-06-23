@@ -5,7 +5,7 @@ import { Scanner } from "./scanner"
 import { Parser } from './parser'
 import { AstPrinter } from './ast-printer'
 
-export function main(args: Array<string>): void {
+export function main(args: string[]): void {
   const filePath = args[2]
 
   if (!filePath) {

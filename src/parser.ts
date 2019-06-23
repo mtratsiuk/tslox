@@ -3,10 +3,10 @@ import { TokenType } from './token-type'
 import * as Expr from './expr'
 
 export class Parser {
-    private tokens: Array<Token>
+    private tokens: Token[]
     private current: number = 0
 
-    constructor(tokens: Array<Token>) {
+    constructor(tokens: Token[]) {
         if (tokens.length === 0) {
             throw new Error('Expected non-empty array of tokens')
         }
@@ -14,7 +14,7 @@ export class Parser {
         this.tokens = tokens
     }
 
-    static parse(tokens: Array<Token>): Expr.Expr {
+    static parse(tokens: Token[]): Expr.Expr {
         return new Parser(tokens).parse()
     }
 
@@ -22,7 +22,7 @@ export class Parser {
         return this.expression()
     }
 
-    private binary = (operation: () => Expr.Expr, ...types: Array<TokenType>) => () => {
+    private binary = (operation: () => Expr.Expr, ...types: TokenType[]) => () => {
         let expr = operation()
 
         while (this.match(...types)) {
@@ -97,7 +97,7 @@ export class Parser {
         throw new Error(message)
     }
 
-    private match(...types: Array<TokenType>): boolean {
+    private match(...types: TokenType[]): boolean {
         for (let type of types) {
             if (this.check(type)) {
                 this.advance()

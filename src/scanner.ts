@@ -27,8 +27,8 @@ const keywords: Record<string, TokenType> = {
 
 export class Scanner {
   private readonly source: string
-  private readonly tokens: Array<Token> = []
-  private readonly errors: Array<ScanError> = []
+  private readonly tokens: Token[] = []
+  private readonly errors: ScanError[] = []
 
   private start: number = 0
   private current: number = 0
@@ -38,11 +38,11 @@ export class Scanner {
     this.source = source
   }
 
-  static scan(source: string): [Array<Token>, Array<ScanError>] {
+  static scan(source: string): [Token[], ScanError[]] {
     return new Scanner(source).scanTokens()
   }
 
-  scanTokens(): [Array<Token>, Array<ScanError>] {
+  scanTokens(): [Token[], ScanError[]] {
     while (!this.isAtEnd()) {
       this.start = this.current
       this.scanToken()
