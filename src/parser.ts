@@ -34,8 +34,7 @@ export class Parser {
                 expr = this.expression()
             } catch (error) {
                 this.errors.push(error)
-                // this.sync
-                this.current = this.tokens.length - 1
+                this.synchronize()
             }
         }
 
@@ -111,6 +110,28 @@ export class Parser {
 
     private expression(): Expr.Expr {
         return this.equality()
+    }
+
+    private synchronize(): void {
+        this.advance();
+
+        while (!this.isAtEnd()) {
+            if (this.previous().type === TokenType.SEMICOLON) return;
+
+            switch (this.peek().type) {
+                case TokenType.CLASS:
+                case TokenType.FUN:
+                case TokenType.VAR:
+                case TokenType.FOR:
+                case TokenType.IF:
+                case TokenType.WHILE:
+                case TokenType.PRINT:
+                case TokenType.RETURN:
+                    return;
+            }
+
+            this.advance();
+        }
     }
 
     private consume(type: TokenType, message: string): Token {
