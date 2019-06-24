@@ -2,8 +2,8 @@ import * as fs from "fs"
 import * as readline from "readline"
 
 import { Scanner } from "./scanner"
-import { Parser } from './parser'
-import { AstPrinter } from './ast-printer'
+import { Parser } from "./parser"
+import { AstPrinter } from "./ast-printer"
 
 export function main(args: string[]): void {
   const filePath = args[2]
@@ -47,27 +47,27 @@ function runPrompt(): void {
 }
 
 function run(source: string): boolean {
-  return Scanner.scan(source)
-    .match({
-      ok: tokens => {
-        return Parser.parse(tokens)
-          .match({
-            ok: expr => {
-              console.log(expr)
-              console.log(AstPrinter.print(expr))
-              return true
-            },
-            fail: errors => {
-              errors.forEach(({ token, message }) => report(token.line, `at "${token.lexeme}"`, message))
-              return false
-            }
-          })
-      },
-      fail: errors => {
-        errors.forEach(({ line, message }) => report(line, "", message))
-        return false
-      }
-    })
+  return Scanner.scan(source).match({
+    ok: tokens => {
+      return Parser.parse(tokens).match({
+        ok: expr => {
+          console.log(expr)
+          console.log(AstPrinter.print(expr))
+          return true
+        },
+        fail: errors => {
+          errors.forEach(({ token, message }) =>
+            report(token.line, `at "${token.lexeme}"`, message)
+          )
+          return false
+        }
+      })
+    },
+    fail: errors => {
+      errors.forEach(({ line, message }) => report(line, "", message))
+      return false
+    }
+  })
 }
 
 function report(line: number, where: string, message: string): void {

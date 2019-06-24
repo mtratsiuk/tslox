@@ -1,4 +1,5 @@
 import * as Expr from "./expr"
+import { notImplemented } from "./common"
 
 export class RpnPrinter implements Expr.Visitor<string> {
   print(expr: Expr.Expr): string {
@@ -6,7 +7,9 @@ export class RpnPrinter implements Expr.Visitor<string> {
   }
 
   visitBinaryExpr(expr: Expr.Binary): string {
-    return `${expr.left.accept(this)} ${expr.right.accept(this)} ${expr.operator.lexeme}`
+    return `${expr.left.accept(this)} ${expr.right.accept(this)} ${
+      expr.operator.lexeme
+    }`
   }
 
   visitGroupingExpr(expr: Expr.Grouping): string {
@@ -15,13 +18,12 @@ export class RpnPrinter implements Expr.Visitor<string> {
 
   visitLiteralExpr(expr: Expr.Literal): string {
     if (expr.value === null) {
-      return 'nil'
+      return "nil"
     }
 
     return expr.value.toString()
   }
 
-  visitUnaryExpr(expr: Expr.Unary): string {
-    throw new Error()
-  }
+  visitUnaryExpr = notImplemented
+  visitTernaryExpr = notImplemented
 }

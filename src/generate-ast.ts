@@ -1,4 +1,4 @@
-import * as fs from 'fs'
+import * as fs from "fs"
 
 main(process.argv)
 
@@ -11,18 +11,29 @@ function main(args: string[]): void {
   })
 }
 
-function defineAst (): string {
+function defineAst(): string {
   enum Types {
-    Expr = 'Expr',
-    Token = 'Token',
-    Literal = 'LiteralValue',
+    Expr = "Expr",
+    Token = "Token",
+    Literal = "LiteralValue"
   }
 
   const nodesDef: Array<[string, ...Array<[Types, string]>]> = [
-    ['Binary', [Types.Expr, 'left'], [Types.Token, 'operator'], [Types.Expr, 'right']],
-    ['Grouping', [Types.Expr, 'expression']],
-    ['Literal', [Types.Literal, 'value']],
-    ['Unary', [Types.Token, 'operator'], [Types.Expr, 'right']]
+    [
+      "Binary",
+      [Types.Expr, "left"],
+      [Types.Token, "operator"],
+      [Types.Expr, "right"]
+    ],
+    [
+      "Ternary",
+      [Types.Expr, "condition"],
+      [Types.Expr, "left"],
+      [Types.Expr, "right"]
+    ],
+    ["Grouping", [Types.Expr, "expression"]],
+    ["Literal", [Types.Literal, "value"]],
+    ["Unary", [Types.Token, "operator"], [Types.Expr, "right"]]
   ]
 
   const expr = `\
@@ -33,21 +44,27 @@ export interface ${Types.Expr} {
 
   const visitor = `\
 export interface Visitor<T> {
-  ${nodesDef.map(([name]) => `visit${name}${Types.Expr}(expr: ${name}): T`).join('\n')}
+  ${nodesDef
+    .map(([name]) => `visit${name}${Types.Expr}(expr: ${name}): T`)
+    .join("\n")}
 }
 `
 
-  const nodes = nodesDef.map(([name, ...args]) => `\
+  const nodes = nodesDef
+    .map(
+      ([name, ...args]) => `\
 export class ${name} implements ${Types.Expr} {
   constructor(
-    ${args.map(([type, name]) => `readonly ${name}: ${type}`).join(', \n')}
+    ${args.map(([type, name]) => `readonly ${name}: ${type}`).join(", \n")}
   ) {}
 
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visit${name}${Types.Expr}(this)
   }
 }
-`).join('\n')
+`
+    )
+    .join("\n")
 
   return `\
 // Generated code

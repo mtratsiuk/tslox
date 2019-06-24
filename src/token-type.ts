@@ -11,6 +11,8 @@ export enum TokenType {
   SEMICOLON,
   SLASH,
   STAR,
+  QUESTION,
+  COLON,
 
   // One or two character tokens.
   BANG,
@@ -45,5 +47,5 @@ export enum TokenType {
   VAR,
   WHILE,
 
-  EOF,
+  EOF
 }

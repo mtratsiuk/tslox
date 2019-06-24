@@ -1,9 +1,9 @@
 import { Token, Literal } from "./token"
 import { TokenType } from "./token-type"
-import { Result } from './common'
+import { Result } from "./common"
 
 export interface ScanError {
-  line: number,
+  line: number
   message: string
 }
 
@@ -23,7 +23,7 @@ const keywords: Record<string, TokenType> = {
   this: TokenType.THIS,
   true: TokenType.TRUE,
   var: TokenType.VAR,
-  while: TokenType.WHILE,
+  while: TokenType.WHILE
 }
 
 export class Scanner {
@@ -42,7 +42,7 @@ export class Scanner {
   static scan(source: string) {
     return new Scanner(source).scanTokens()
   }
-  
+
   scanTokens(): Result<Token[], ScanError[]> {
     while (!this.isAtEnd()) {
       this.start = this.current
@@ -92,6 +92,12 @@ export class Scanner {
       case "*":
         this.addToken(TokenType.STAR)
         break
+      case "?":
+        this.addToken(TokenType.QUESTION)
+        break
+      case ":":
+        this.addToken(TokenType.COLON)
+        break
       case "!":
         this.addToken(this.match("=") ? TokenType.BANG_EQUAL : TokenType.BANG)
         break
@@ -102,7 +108,9 @@ export class Scanner {
         this.addToken(this.match("=") ? TokenType.LESS_EQUAL : TokenType.LESS)
         break
       case ">":
-        this.addToken(this.match("=") ? TokenType.GREATER_EQUAL : TokenType.GREATER)
+        this.addToken(
+          this.match("=") ? TokenType.GREATER_EQUAL : TokenType.GREATER
+        )
         break
       case "/":
         if (this.match("/")) {
@@ -110,8 +118,11 @@ export class Scanner {
             this.advance()
           }
         } else if (this.match("*")) {
-          while (!this.isAtEnd() && !(this.peek() === '*' && this.peekNext() === '/')) {
-            if (this.peek() === '\n') {
+          while (
+            !this.isAtEnd() &&
+            !(this.peek() === "*" && this.peekNext() === "/")
+          ) {
+            if (this.peek() === "\n") {
               this.line += 1
             }
 
@@ -119,7 +130,7 @@ export class Scanner {
           }
 
           if (this.isAtEnd()) {
-            this.error(this.line, 'Unterminated multiline comment')
+            this.error(this.line, "Unterminated multiline comment")
           } else {
             this.advance()
             this.advance()
@@ -169,7 +180,10 @@ export class Scanner {
 
     this.advance()
 
-    this.addToken(TokenType.STRING, this.source.slice(this.start + 1, this.current - 1))
+    this.addToken(
+      TokenType.STRING,
+      this.source.slice(this.start + 1, this.current - 1)
+    )
   }
 
   private scanNumber(): void {
@@ -185,7 +199,10 @@ export class Scanner {
       }
     }
 
-    this.addToken(TokenType.NUMBER, Number(this.source.slice(this.start, this.current)))
+    this.addToken(
+      TokenType.NUMBER,
+      Number(this.source.slice(this.start, this.current))
+    )
   }
 
   private scanIdentifier(): void {

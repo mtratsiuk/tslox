@@ -1,7 +1,7 @@
 import * as Expr from "./expr"
 
 export class AstPrinter implements Expr.Visitor<string> {
-  static print (expr: Expr.Expr): string {
+  static print(expr: Expr.Expr): string {
     return new AstPrinter().print(expr)
   }
 
@@ -10,20 +10,27 @@ export class AstPrinter implements Expr.Visitor<string> {
   }
 
   private parenthesize(name: string, ...exprs: Expr.Expr[]): string {
-    return exprs.reduce((str, expr) => str + " " + expr.accept(this), "(" + name) + ')'
+    return (
+      exprs.reduce((str, expr) => str + " " + expr.accept(this), "(" + name) +
+      ")"
+    )
   }
 
   visitBinaryExpr(expr: Expr.Binary): string {
     return this.parenthesize(expr.operator.lexeme, expr.left, expr.right)
   }
 
+  visitTernaryExpr(expr: Expr.Ternary): string {
+    return this.parenthesize("if", expr.condition, expr.left, expr.right)
+  }
+
   visitGroupingExpr(expr: Expr.Grouping): string {
-    return this.parenthesize('group', expr.expression)
+    return this.parenthesize("group", expr.expression)
   }
 
   visitLiteralExpr(expr: Expr.Literal): string {
     if (expr.value === null) {
-      return 'nil'
+      return "nil"
     }
 
     return expr.value.toString()
