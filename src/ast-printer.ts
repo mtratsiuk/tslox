@@ -33,6 +33,10 @@ export class AstPrinter implements Expr.Visitor<string> {
       return "nil"
     }
 
+    if (typeof expr.value === 'string') {
+      return `"${expr.value}"`
+    }
+
     return expr.value.toString()
   }
 

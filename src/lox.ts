@@ -3,6 +3,7 @@ import * as readline from "readline"
 
 import { Scanner } from "./scanner"
 import { Parser } from "./parser"
+import { Interpreter } from "./interpreter"
 import { AstPrinter } from "./ast-printer"
 
 export function main(args: string[]): void {
@@ -22,9 +23,7 @@ function runFile(filePath: string): void {
       process.exit(1)
     }
 
-    if (!run(source)) {
-      process.exit(65)
-    }
+    process.exit(run(source))
   })
 }
 
@@ -46,26 +45,42 @@ function runPrompt(): void {
   })
 }
 
-function run(source: string): boolean {
+enum ExitCode {
+  Ok = 0,
+  FormatError = 65,
+  RuntimeError = 70,
+}
+
+function run(source: string): ExitCode {
   return Scanner.scan(source).match({
     ok: tokens => {
       return Parser.parse(tokens).match({
         ok: expr => {
           console.log(expr)
           console.log(AstPrinter.print(expr))
-          return true
+
+          return Interpreter.interpret(expr).match({
+            ok: result => {
+              console.log(JSON.stringify(result))
+              return ExitCode.Ok
+            },
+            fail: error => {
+              console.log(error)
+              return ExitCode.RuntimeError
+            }
+          })
         },
         fail: errors => {
           errors.forEach(({ token, message }) =>
             report(token.line, `at "${token.lexeme}"`, message)
           )
-          return false
+          return ExitCode.FormatError
         }
       })
     },
     fail: errors => {
       errors.forEach(({ line, message }) => report(line, "", message))
-      return false
+      return ExitCode.FormatError
     }
   })
 }
