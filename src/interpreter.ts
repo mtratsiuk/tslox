@@ -5,10 +5,6 @@ import { Result } from "./common"
 
 type LoxValue = Literal | object
 
-type OperatorsMap = Partial<
-  Record<TokenType, (operator: Token, ...operands: LoxValue[]) => LoxValue>
->
-
 export class RuntimeError extends Error {
   constructor(public token: Token, public message: string) {
     super(message)
@@ -65,7 +61,11 @@ const isString = (v: LoxValue): v is string => typeof v === "string"
 
 const isNumber = (v: LoxValue): v is number => typeof v === "number"
 
+const isNil = (v: LoxValue): v is null => v === null
+
 const isTruthy = (v: LoxValue) => v !== null && v !== false
+
+const stringify = (v: LoxValue): string => (isNil(v) ? "nil" : v.toString())
 
 const checkOperands = <T extends LoxValue>(
   assert: (v: LoxValue) => v is T,
@@ -95,13 +95,32 @@ const checkNumberOrStringOperands = checkOperands(
   checkOperands(isString, numberOrStringErrorMessage)
 )
 
+type OperatorsMap = Partial<
+  Record<TokenType, (operator: Token, ...operands: LoxValue[]) => LoxValue>
+>
+
 const unaryOperators: OperatorsMap = {
   [TokenType.BANG]: (_, v) => !isTruthy(v),
   [TokenType.MINUS]: checkNumberOperands(v => -v)
 }
 
+const binaryPlusOperator = (op: Token, a: LoxValue, b: LoxValue): LoxValue => {
+  if (isNumber(a) && isNumber(b)) {
+    return a + b
+  }
+
+  if (isString(a) || isString(b)) {
+    return stringify(a) + stringify(b)
+  }
+
+  throw new RuntimeError(
+    op,
+    "Operands must be two numbers or one of them must be a string"
+  )
+}
+
 const binaryOperators: OperatorsMap = {
-  [TokenType.PLUS]: checkNumberOrStringOperands((a, b) => a + b),
+  [TokenType.PLUS]: binaryPlusOperator,
   [TokenType.MINUS]: checkNumberOperands((a, b) => a - b),
   [TokenType.SLASH]: checkNumberOperands((a, b) => a / b),
   [TokenType.STAR]: checkNumberOperands((a, b) => a * b),
