@@ -35,7 +35,11 @@ export class Interpreter implements Expr.Visitor<LoxValue> {
   }
 
   visitTernaryExpr(expr: Expr.Ternary): LoxValue {
-    throw new Error()
+    if (isTruthy(this.eval(expr.condition))) {
+      return this.eval(expr.left)
+    }
+
+    return this.eval(expr.right)
   }
 
   visitGroupingExpr(expr: Expr.Grouping): LoxValue {
