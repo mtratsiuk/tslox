@@ -106,10 +106,10 @@ const binaryOperators: OperatorsMap = {
   [TokenType.SLASH]: checkNumberOperands((a, b) => a / b),
   [TokenType.STAR]: checkNumberOperands((a, b) => a * b),
 
-  [TokenType.GREATER]: checkNumberOperands((a, b) => a > b),
-  [TokenType.GREATER_EQUAL]: checkNumberOperands((a, b) => a >= b),
-  [TokenType.LESS]: checkNumberOperands((a, b) => a < b),
-  [TokenType.LESS_EQUAL]: checkNumberOperands((a, b) => a <= b),
+  [TokenType.GREATER]: checkNumberOrStringOperands((a, b) => a > b),
+  [TokenType.GREATER_EQUAL]: checkNumberOrStringOperands((a, b) => a >= b),
+  [TokenType.LESS]: checkNumberOrStringOperands((a, b) => a < b),
+  [TokenType.LESS_EQUAL]: checkNumberOrStringOperands((a, b) => a <= b),
 
   [TokenType.EQUAL_EQUAL]: (_, a, b) => a === b,
   [TokenType.BANG_EQUAL]: (_, a, b) => a !== b
