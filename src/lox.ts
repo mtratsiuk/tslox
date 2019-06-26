@@ -3,7 +3,7 @@ import * as readline from "readline"
 
 import { Scanner } from "./scanner"
 import { Parser } from "./parser"
-import { Interpreter } from "./interpreter"
+import { Interpreter, stringify } from "./interpreter"
 import { AstPrinter } from "./ast-printer"
 
 export function main(args: string[]): void {
@@ -48,7 +48,7 @@ function runPrompt(): void {
 enum ExitCode {
   Ok = 0,
   FormatError = 65,
-  RuntimeError = 70,
+  RuntimeError = 70
 }
 
 function run(source: string): ExitCode {
@@ -61,11 +61,15 @@ function run(source: string): ExitCode {
 
           return Interpreter.interpret(expr).match({
             ok: result => {
-              console.log(JSON.stringify(result))
+              console.log(stringify(result))
               return ExitCode.Ok
             },
             fail: error => {
-              console.log(error)
+              report(
+                error.token.line,
+                `at "${error.token.lexeme}"`,
+                error.message
+              )
               return ExitCode.RuntimeError
             }
           })

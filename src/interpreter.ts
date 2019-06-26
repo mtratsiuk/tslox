@@ -12,7 +12,7 @@ export class RuntimeError extends Error {
 }
 
 export class Interpreter implements Expr.Visitor<LoxValue> {
-  static interpret(expr: Expr.Expr): Result<LoxValue, Error> {
+  static interpret(expr: Expr.Expr): Result<LoxValue, RuntimeError> {
     try {
       return Result.Ok(new Interpreter().eval(expr))
     } catch (error) {
@@ -57,15 +57,16 @@ export class Interpreter implements Expr.Visitor<LoxValue> {
   }
 }
 
-const isString = (v: LoxValue): v is string => typeof v === "string"
+export const isString = (v: LoxValue): v is string => typeof v === "string"
 
-const isNumber = (v: LoxValue): v is number => typeof v === "number"
+export const isNumber = (v: LoxValue): v is number => typeof v === "number"
 
-const isNil = (v: LoxValue): v is null => v === null
+export const isNil = (v: LoxValue): v is null => v === null
 
-const isTruthy = (v: LoxValue) => v !== null && v !== false
+export const isTruthy = (v: LoxValue) => v !== null && v !== false
 
-const stringify = (v: LoxValue): string => (isNil(v) ? "nil" : v.toString())
+export const stringify = (v: LoxValue): string =>
+  isNil(v) ? "nil" : v.toString()
 
 const checkOperands = <T extends LoxValue>(
   assert: (v: LoxValue) => v is T,
@@ -119,10 +120,18 @@ const binaryPlusOperator = (op: Token, a: LoxValue, b: LoxValue): LoxValue => {
   )
 }
 
+const binarySlashOperator = (op: Token, a: LoxValue, b: LoxValue): LoxValue => {
+  if (b === 0) {
+    throw new RuntimeError(op, "Division by zero")
+  }
+
+  return checkNumberOperands((a, b) => a / b)(op, a, b)
+}
+
 const binaryOperators: OperatorsMap = {
   [TokenType.PLUS]: binaryPlusOperator,
   [TokenType.MINUS]: checkNumberOperands((a, b) => a - b),
-  [TokenType.SLASH]: checkNumberOperands((a, b) => a / b),
+  [TokenType.SLASH]: binarySlashOperator,
   [TokenType.STAR]: checkNumberOperands((a, b) => a * b),
 
   [TokenType.GREATER]: checkNumberOrStringOperands((a, b) => a > b),
