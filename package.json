@@ -21,7 +21,8 @@
     "test": "exit 0",
     "start": "tsc && node build/index.js",
     "start:watch": "tsc -w & nodemon -w build build/index.js",
-    "codegen:ast": "rm -f ./src/expr.ts && tsc && node build/src/generate-ast.js ./src/expr.ts"
+    "codegen:expr": "tsc --outDir ./build/src ./src/generate-ast.ts && node build/src/generate-ast.js Expr ./src",
+    "codegen:stmt": "tsc --outDir ./build/src ./src/generate-ast.ts && node build/src/generate-ast.js Stmt ./src"
   },
   "devDependencies": {
     "@types/node": "^10.14.4",
