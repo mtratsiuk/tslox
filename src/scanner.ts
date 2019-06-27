@@ -49,7 +49,7 @@ export class Scanner {
       this.scanToken()
     }
 
-    this.tokens.push(new Token(TokenType.EOF, "", null, this.line))
+    this.tokens.push(new Token(TokenType.EOF, "EOF", null, this.line))
 
     if (this.errors.length === 0) {
       return Result.Ok(this.tokens)

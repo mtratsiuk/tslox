@@ -3,8 +3,10 @@ import * as readline from "readline"
 
 import { Scanner } from "./scanner"
 import { Parser } from "./parser"
-import { Interpreter, stringify } from "./interpreter"
+import { Interpreter, stringify, LoxValue } from "./interpreter"
 import { AstPrinter } from "./ast-printer"
+import { Token } from "./token"
+import * as Stmt from "./stmt"
 
 export function main(args: string[]): void {
   const filePath = args[2]
@@ -37,7 +39,10 @@ function runPrompt(): void {
   rl.prompt()
 
   rl.on("line", line => {
-    run(line.trim())
+    run(line.trim(), ({ result, statements }) => {
+      console.log(statements)
+      console.log(stringify(result))
+    })
 
     rl.prompt()
   }).on("close", () => {
@@ -51,17 +56,23 @@ enum ExitCode {
   RuntimeError = 70
 }
 
-function run(source: string): ExitCode {
+function run(
+  source: string,
+  onSuccess?: (arg: {
+    tokens: Token[]
+    statements: Stmt.Stmt[]
+    result: LoxValue
+  }) => void
+): ExitCode {
   return Scanner.scan(source).match({
     ok: tokens => {
       return Parser.parse(tokens).match({
-        ok: expr => {
-          console.log(expr)
-          console.log(AstPrinter.print(expr))
-
-          return Interpreter.interpret(expr).match({
+        ok: statements => {
+          return Interpreter.interpret(statements).match({
             ok: result => {
-              console.log(stringify(result))
+              if (onSuccess) {
+                onSuccess({ tokens, statements, result })
+              }
               return ExitCode.Ok
             },
             fail: error => {

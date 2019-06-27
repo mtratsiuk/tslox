@@ -2,6 +2,7 @@ import { Token } from "./token"
 import { TokenType } from "./token-type"
 import { Result } from "./common"
 import * as Expr from "./expr"
+import * as Stmt from "./stmt"
 
 export class ParseError extends Error {
   constructor(public token: Token, public message: string) {
@@ -26,20 +27,20 @@ export class Parser {
     return new Parser(tokens).parse()
   }
 
-  parse(): Result<Expr.Expr, ParseError[]> {
-    let expr
+  parse(): Result<Stmt.Stmt[], ParseError[]> {
+    const statements = []
 
     while (!this.isAtEnd()) {
       try {
-        expr = this.expression()
+        statements.push(this.statement())
       } catch (error) {
         this.errors.push(error)
         this.synchronize()
       }
     }
 
-    if (expr && this.errors.length === 0) {
-      return Result.Ok(expr)
+    if (this.errors.length === 0) {
+      return Result.Ok(statements)
     }
 
     return Result.Fail(this.errors)
@@ -127,6 +128,26 @@ export class Parser {
 
   private expression(): Expr.Expr {
     return this.ternary()
+  }
+
+  private statement(): Stmt.Stmt {
+    if (this.match(TokenType.PRINT)) {
+      return this.printStatement()
+    }
+
+    return this.expressionStatement()
+  }
+
+  private printStatement(): Stmt.Print {
+    const expr = this.expression()
+    this.consume(TokenType.SEMICOLON, "Expected ';' after print statement")
+    return new Stmt.Print(expr)
+  }
+
+  private expressionStatement(): Stmt.Print {
+    const expr = this.expression()
+    this.consume(TokenType.SEMICOLON, "Expected ';' expression")
+    return new Stmt.Expression(expr)
   }
 
   private synchronize(): void {

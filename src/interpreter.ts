@@ -1,9 +1,10 @@
 import * as Expr from "./expr"
+import * as Stmt from "./stmt"
 import { TokenType } from "./token-type"
 import { Literal, Token } from "./token"
 import { Result } from "./common"
 
-type LoxValue = Literal | object
+export type LoxValue = Literal | object
 
 export class RuntimeError extends Error {
   constructor(public token: Token, public message: string) {
@@ -11,17 +12,37 @@ export class RuntimeError extends Error {
   }
 }
 
-export class Interpreter implements Expr.Visitor<LoxValue> {
-  static interpret(expr: Expr.Expr): Result<LoxValue, RuntimeError> {
+export class Interpreter
+  implements Expr.Visitor<LoxValue>, Stmt.Visitor<LoxValue> {
+  static interpret(statements: Stmt.Stmt[]) {
+    return new Interpreter().interpret(statements)
+  }
+
+  interpret(statements: Stmt.Stmt[]): Result<LoxValue, RuntimeError> {
     try {
-      return Result.Ok(new Interpreter().eval(expr))
+      return Result.Ok(
+        statements.reduce((_, stmt) => this.exec(stmt), null as LoxValue)
+      )
     } catch (error) {
       return Result.Fail(error)
     }
   }
 
+  exec(stmt: Stmt.Stmt): LoxValue {
+    return stmt.accept(this)
+  }
+
   eval(expr: Expr.Expr): LoxValue {
     return expr.accept(this)
+  }
+
+  visitExpressionStmt(stmt: Stmt.Expression): LoxValue {
+    return this.eval(stmt.expression)
+  }
+
+  visitPrintStmt(stmt: Stmt.Print): LoxValue {
+    console.log(stringify(this.eval(stmt.expression)))
+    return null
   }
 
   visitBinaryExpr(expr: Expr.Binary): LoxValue {
