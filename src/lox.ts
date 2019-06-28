@@ -42,8 +42,14 @@ function runPrompt(): void {
 
   rl.on("line", line => {
     run(line.trim(), { interpreter }, ({ result, statements }) => {
-      console.log(statements)
-      console.log(stringify(result))
+      if (statements) {
+        console.log(statements)
+        console.log(AstPrinter.print(statements))
+      }
+
+      if (result !== undefined) {
+        console.log(stringify(result))
+      }
     })
 
     rl.prompt()
@@ -61,21 +67,30 @@ enum ExitCode {
 function run(
   source: string,
   ctx: { interpreter?: Interpreter } = {},
-  onSuccess?: (arg: {
-    tokens: Token[]
-    statements: Stmt.Stmt[]
-    result: LoxValue
+  callback?: (arg: {
+    tokens?: Token[]
+    statements?: Stmt.Stmt[]
+    result?: LoxValue
   }) => void
 ): ExitCode {
   return Scanner.scan(source).match({
     ok: tokens => {
+      if (callback) {
+        callback({ tokens })
+      }
+
       return Parser.parse(tokens).match({
         ok: statements => {
+          if (callback) {
+            callback({ statements })
+          }
+
           return (ctx.interpreter || Interpreter).interpret(statements).match({
             ok: result => {
-              if (onSuccess) {
-                onSuccess({ tokens, statements, result })
+              if (callback) {
+                callback({ result })
               }
+
               return ExitCode.Ok
             },
             fail: error => {

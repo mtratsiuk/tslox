@@ -1,7 +1,6 @@
 // Generated code
 
-import { Expr } from "./expr"
-import { Token } from "./token"
+import { Expr, Variable } from "./expr"
 
 export interface Visitor<T> {
   visitExpressionStmt(stmt: Expression): T
@@ -30,7 +29,7 @@ export class Print implements Stmt {
 }
 
 export class Var implements Stmt {
-  constructor(readonly name: Token, readonly initializer?: Expr) {}
+  constructor(readonly variable: Variable, readonly initializer?: Expr) {}
 
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitVarStmt(this)

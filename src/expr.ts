@@ -9,6 +9,7 @@ export interface Visitor<T> {
   visitLiteralExpr(expr: Literal): T
   visitUnaryExpr(expr: Unary): T
   visitVariableExpr(expr: Variable): T
+  visitAssignExpr(expr: Assign): T
 }
 
 export interface Expr {
@@ -68,5 +69,13 @@ export class Variable implements Expr {
 
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitVariableExpr(this)
+  }
+}
+
+export class Assign implements Expr {
+  constructor(readonly variable: Variable, readonly value: Expr) {}
+
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitAssignExpr(this)
   }
 }

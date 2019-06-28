@@ -21,7 +21,8 @@ enum Types {
   Expr = "Expr",
   Stmt = "Stmt",
   Token = "Token",
-  Literal = "LiteralValue"
+  Literal = "LiteralValue",
+  Variable = "Variable"
 }
 
 type NodesDef = Array<[string, ...Array<[Types, string]>]>
@@ -42,13 +43,14 @@ const exprNodesDef: NodesDef = [
   ["Grouping", [Types.Expr, "expression"]],
   ["Literal", [Types.Literal, "value"]],
   ["Unary", [Types.Token, "operator"], [Types.Expr, "right"]],
-  ["Variable", [Types.Token, "name"]]
+  ["Variable", [Types.Token, "name"]],
+  ["Assign", [Types.Variable, "variable"], [Types.Expr, "value"]]
 ]
 
 const stmtNodesDef: NodesDef = [
   ["Expression", [Types.Expr, "expression"]],
   ["Print", [Types.Expr, "expression"]],
-  ["Var", [Types.Token, "name"], [Types.Expr, "initializer?"]]
+  ["Var", [Types.Variable, "variable"], [Types.Expr, "initializer?"]]
 ]
 
 const nodeDefs: Record<string, NodesDef> = {
@@ -58,10 +60,7 @@ const nodeDefs: Record<string, NodesDef> = {
 
 const imports: Record<string, string> = {
   [Types.Expr]: 'import { Token, Literal as LiteralValue } from "./token"',
-  [Types.Stmt]: [
-    'import { Expr } from "./expr"',
-    'import { Token } from "./token"'
-  ].join("\n")
+  [Types.Stmt]: 'import { Expr, Variable } from "./expr"'
 }
 
 function defineAst(

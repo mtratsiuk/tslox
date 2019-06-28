@@ -51,13 +51,21 @@ export class Interpreter
   visitVarStmt(stmt: Stmt.Var): LoxValue {
     const value = stmt.initializer ? this.eval(stmt.initializer) : null
 
-    this.environment.define(stmt.name, value)
+    this.environment.define(stmt.variable.name, value)
 
     return null
   }
 
   visitVariableExpr(expr: Expr.Variable): LoxValue {
     return this.environment.get(expr.name)
+  }
+
+  visitAssignExpr(expr: Expr.Assign): LoxValue {
+    const value = this.eval(expr.value)
+
+    this.environment.assign(expr.variable.name, value)
+
+    return value
   }
 
   visitBinaryExpr(expr: Expr.Binary): LoxValue {

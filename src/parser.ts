@@ -130,8 +130,25 @@ export class Parser {
     return expr
   }
 
+  private assignment(): Expr.Expr {
+    const expr = this.ternary()
+
+    if (this.match(TokenType.EQUAL)) {
+      const op = this.previous()
+      const value = this.assignment()
+
+      if (expr instanceof Expr.Variable) {
+        return new Expr.Assign(expr, value)
+      }
+
+      throw new ParseError(op, "Invalid assignment target")
+    }
+
+    return expr
+  }
+
   private expression(): Expr.Expr {
-    return this.ternary()
+    return this.assignment()
   }
 
   private statement(): Stmt.Stmt {
@@ -169,7 +186,7 @@ export class Parser {
       : undefined
 
     this.consume(TokenType.SEMICOLON, "Expected ';' after variable declaration")
-    return new Stmt.Var(name, initializer)
+    return new Stmt.Var(new Expr.Variable(name), initializer)
   }
 
   private synchronize(): void {
