@@ -3,6 +3,7 @@ import * as Stmt from "./stmt"
 import { TokenType } from "./token-type"
 import { Literal, Token } from "./token"
 import { Result } from "./common"
+import { Environment } from "./environment"
 
 export type LoxValue = Literal | object
 
@@ -17,6 +18,8 @@ export class Interpreter
   static interpret(statements: Stmt.Stmt[]) {
     return new Interpreter().interpret(statements)
   }
+
+  private environment = new Environment()
 
   interpret(statements: Stmt.Stmt[]): Result<LoxValue, RuntimeError> {
     try {
@@ -43,6 +46,18 @@ export class Interpreter
   visitPrintStmt(stmt: Stmt.Print): LoxValue {
     console.log(stringify(this.eval(stmt.expression)))
     return null
+  }
+
+  visitVarStmt(stmt: Stmt.Var): LoxValue {
+    const value = stmt.initializer ? this.eval(stmt.initializer) : null
+
+    this.environment.define(stmt.name, value)
+
+    return null
+  }
+
+  visitVariableExpr(expr: Expr.Variable): LoxValue {
+    return this.environment.get(expr.name)
   }
 
   visitBinaryExpr(expr: Expr.Binary): LoxValue {

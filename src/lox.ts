@@ -36,10 +36,12 @@ function runPrompt(): void {
     prompt: ">"
   })
 
+  const interpreter = new Interpreter()
+
   rl.prompt()
 
   rl.on("line", line => {
-    run(line.trim(), ({ result, statements }) => {
+    run(line.trim(), { interpreter }, ({ result, statements }) => {
       console.log(statements)
       console.log(stringify(result))
     })
@@ -58,6 +60,7 @@ enum ExitCode {
 
 function run(
   source: string,
+  ctx: { interpreter?: Interpreter } = {},
   onSuccess?: (arg: {
     tokens: Token[]
     statements: Stmt.Stmt[]
@@ -68,7 +71,7 @@ function run(
     ok: tokens => {
       return Parser.parse(tokens).match({
         ok: statements => {
-          return Interpreter.interpret(statements).match({
+          return (ctx.interpreter || Interpreter).interpret(statements).match({
             ok: result => {
               if (onSuccess) {
                 onSuccess({ tokens, statements, result })

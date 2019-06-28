@@ -32,7 +32,7 @@ export class Parser {
 
     while (!this.isAtEnd()) {
       try {
-        statements.push(this.statement())
+        statements.push(this.declaration())
       } catch (error) {
         this.errors.push(error)
         this.synchronize()
@@ -69,6 +69,10 @@ export class Parser {
 
     if (this.match(TokenType.NUMBER, TokenType.STRING)) {
       return new Expr.Literal(this.previous().literal)
+    }
+
+    if (this.match(TokenType.IDENTIFIER)) {
+      return new Expr.Variable(this.previous())
     }
 
     this.consume(TokenType.LEFT_PAREN, "Expected expression")
@@ -148,6 +152,24 @@ export class Parser {
     const expr = this.expression()
     this.consume(TokenType.SEMICOLON, "Expected ';' expression")
     return new Stmt.Expression(expr)
+  }
+
+  private declaration(): Stmt.Stmt {
+    if (this.match(TokenType.VAR)) {
+      return this.varDeclaration()
+    }
+
+    return this.statement()
+  }
+
+  private varDeclaration(): Stmt.Var {
+    const name = this.consume(TokenType.IDENTIFIER, "Expected variable name")
+    const initializer = this.match(TokenType.EQUAL)
+      ? this.expression()
+      : undefined
+
+    this.consume(TokenType.SEMICOLON, "Expected ';' after variable declaration")
+    return new Stmt.Var(name, initializer)
   }
 
   private synchronize(): void {

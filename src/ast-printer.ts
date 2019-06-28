@@ -33,7 +33,7 @@ export class AstPrinter implements Expr.Visitor<string> {
       return "nil"
     }
 
-    if (typeof expr.value === 'string') {
+    if (typeof expr.value === "string") {
       return `"${expr.value}"`
     }
 
@@ -42,5 +42,9 @@ export class AstPrinter implements Expr.Visitor<string> {
 
   visitUnaryExpr(expr: Expr.Unary): string {
     return this.parenthesize(expr.operator.lexeme, expr.right)
+  }
+
+  visitVariableExpr(expr: Expr.Variable): string {
+    return expr.name.lexeme
   }
 }

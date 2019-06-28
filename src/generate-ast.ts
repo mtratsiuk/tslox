@@ -41,12 +41,14 @@ const exprNodesDef: NodesDef = [
   ],
   ["Grouping", [Types.Expr, "expression"]],
   ["Literal", [Types.Literal, "value"]],
-  ["Unary", [Types.Token, "operator"], [Types.Expr, "right"]]
+  ["Unary", [Types.Token, "operator"], [Types.Expr, "right"]],
+  ["Variable", [Types.Token, "name"]]
 ]
 
 const stmtNodesDef: NodesDef = [
   ["Expression", [Types.Expr, "expression"]],
-  ["Print", [Types.Expr, "expression"]]
+  ["Print", [Types.Expr, "expression"]],
+  ["Var", [Types.Token, "name"], [Types.Expr, "initializer?"]]
 ]
 
 const nodeDefs: Record<string, NodesDef> = {
@@ -56,7 +58,10 @@ const nodeDefs: Record<string, NodesDef> = {
 
 const imports: Record<string, string> = {
   [Types.Expr]: 'import { Token, Literal as LiteralValue } from "./token"',
-  [Types.Stmt]: 'import { Expr } from "./expr"'
+  [Types.Stmt]: [
+    'import { Expr } from "./expr"',
+    'import { Token } from "./token"'
+  ].join("\n")
 }
 
 function defineAst(
@@ -73,7 +78,10 @@ export interface ${baseName} {
   const visitor = `\
 export interface Visitor<T> {
   ${nodesDef
-    .map(([name]) => `visit${name}${baseName}(expr: ${name}): T`)
+    .map(
+      ([name]) =>
+        `visit${name}${baseName}(${baseName.toLowerCase()}: ${name}): T`
+    )
     .join("\n")}
 }
 `
