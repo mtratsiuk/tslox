@@ -23,16 +23,21 @@ export class Interpreter
 
   interpret(statements: Stmt.Stmt[]): Result<LoxValue, RuntimeError> {
     try {
-      return Result.Ok(
-        statements.reduce((_, stmt) => this.exec(stmt), null as LoxValue)
-      )
+      return Result.Ok(this.exec(statements))
     } catch (error) {
       return Result.Fail(error)
     }
   }
 
-  exec(stmt: Stmt.Stmt): LoxValue {
-    return stmt.accept(this)
+  exec(statements: Stmt.Stmt[]): LoxValue
+  exec(statements: Stmt.Stmt): LoxValue
+
+  exec(statements: Stmt.Stmt | Stmt.Stmt[]): LoxValue {
+    if (!Array.isArray(statements)) {
+      return statements.accept(this)
+    }
+
+    return statements.reduce((_, s) => this.exec(s), null as LoxValue)
   }
 
   eval(expr: Expr.Expr): LoxValue {
@@ -54,6 +59,10 @@ export class Interpreter
     this.environment.define(stmt.variable.name, value)
 
     return null
+  }
+
+  visitBlockStmt(stmt: Stmt.Block): LoxValue {
+    return this.execBlock(stmt.statements, new Environment(this.environment))
   }
 
   visitVariableExpr(expr: Expr.Variable): LoxValue {
@@ -102,6 +111,21 @@ export class Interpreter
     }
 
     throw new Error()
+  }
+
+  private execBlock(
+    statements: Stmt.Stmt[],
+    environment: Environment
+  ): LoxValue {
+    const previous = this.environment
+
+    try {
+      this.environment = environment
+
+      return this.exec(statements)
+    } finally {
+      this.environment = previous
+    }
   }
 }
 

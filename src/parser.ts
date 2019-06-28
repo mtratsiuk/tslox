@@ -156,6 +156,10 @@ export class Parser {
       return this.printStatement()
     }
 
+    if (this.match(TokenType.LEFT_BRACE)) {
+      return this.blockStatement()
+    }
+
     return this.expressionStatement()
   }
 
@@ -165,10 +169,22 @@ export class Parser {
     return new Stmt.Print(expr)
   }
 
-  private expressionStatement(): Stmt.Print {
+  private expressionStatement(): Stmt.Expression {
     const expr = this.expression()
     this.consume(TokenType.SEMICOLON, "Expected ';' expression")
     return new Stmt.Expression(expr)
+  }
+
+  private blockStatement(): Stmt.Block {
+    const statements = []
+
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      statements.push(this.declaration())
+    }
+
+    this.consume(TokenType.RIGHT_BRACE, "Expected '}' after block")
+
+    return new Stmt.Block(statements)
   }
 
   private declaration(): Stmt.Stmt {

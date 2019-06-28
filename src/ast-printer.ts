@@ -5,20 +5,22 @@ export class AstPrinter implements Expr.Visitor<string>, Stmt.Visitor<string> {
   static print(statements: Stmt.Stmt[]): string {
     const printer = new AstPrinter()
 
-    return statements.map(s => printer.printStatement(s)).join("\n")
+    return statements.map(s => printer.print(s)).join("\n")
   }
 
-  printStatement(stmt: Stmt.Stmt): string {
-    return stmt.accept(this)
-  }
+  print(stmt: Stmt.Stmt): string
+  print(expr: Expr.Expr): string
 
-  printExpression(expr: Expr.Expr): string {
+  print(expr: any): string {
     return expr.accept(this)
   }
 
   private depth = -1
 
-  private parenthesize(name: string, ...exprs: Expr.Expr[]): string {
+  private parenthesize(name: string, ...exprs: Stmt.Stmt[]): string
+  private parenthesize(name: string, ...exprs: Expr.Expr[]): string
+
+  private parenthesize(name: string, ...exprs: any[]): string {
     this.depth += 1
     try {
       return (
@@ -33,7 +35,7 @@ export class AstPrinter implements Expr.Visitor<string>, Stmt.Visitor<string> {
   }
 
   visitExpressionStmt(stmt: Stmt.Expression): string {
-    return this.printExpression(stmt.expression)
+    return this.print(stmt.expression)
   }
 
   visitPrintStmt(stmt: Stmt.Print): string {
@@ -48,6 +50,10 @@ export class AstPrinter implements Expr.Visitor<string>, Stmt.Visitor<string> {
     }
 
     return this.parenthesize("define", ...exprs)
+  }
+
+  visitBlockStmt(stmt: Stmt.Block): string {
+    return this.parenthesize("block", ...stmt.statements)
   }
 
   visitBinaryExpr(expr: Expr.Binary): string {

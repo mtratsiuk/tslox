@@ -6,6 +6,7 @@ export interface Visitor<T> {
   visitExpressionStmt(stmt: Expression): T
   visitPrintStmt(stmt: Print): T
   visitVarStmt(stmt: Var): T
+  visitBlockStmt(stmt: Block): T
 }
 
 export interface Stmt {
@@ -33,5 +34,13 @@ export class Var implements Stmt {
 
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitVarStmt(this)
+  }
+}
+
+export class Block implements Stmt {
+  constructor(readonly statements: Stmt[]) {}
+
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitBlockStmt(this)
   }
 }

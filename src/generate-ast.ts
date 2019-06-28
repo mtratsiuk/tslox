@@ -25,7 +25,7 @@ enum Types {
   Variable = "Variable"
 }
 
-type NodesDef = Array<[string, ...Array<[Types, string]>]>
+type NodesDef = Array<[string, ...Array<[Types | string, string]>]>
 
 const exprNodesDef: NodesDef = [
   [
@@ -50,7 +50,8 @@ const exprNodesDef: NodesDef = [
 const stmtNodesDef: NodesDef = [
   ["Expression", [Types.Expr, "expression"]],
   ["Print", [Types.Expr, "expression"]],
-  ["Var", [Types.Variable, "variable"], [Types.Expr, "initializer?"]]
+  ["Var", [Types.Variable, "variable"], [Types.Expr, "initializer?"]],
+  ["Block", [`${Types.Stmt}[]`, "statements"]]
 ]
 
 const nodeDefs: Record<string, NodesDef> = {

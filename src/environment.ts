@@ -4,6 +4,8 @@ import { Token } from "./token"
 export class Environment {
   private readonly values = new Map<string, LoxValue>()
 
+  constructor(private readonly enclosing?: Environment) {}
+
   define(name: Token, value: LoxValue): void {
     this.values.set(name.lexeme, value)
   }
@@ -14,6 +16,10 @@ export class Environment {
       return
     }
 
+    if (this.enclosing) {
+      return this.enclosing.assign(name, value)
+    }
+
     return this.undefinedVariableError(name)
   }
 
@@ -22,6 +28,10 @@ export class Environment {
 
     if (value !== undefined) {
       return value
+    }
+
+    if (this.enclosing) {
+      return this.enclosing.get(name)
     }
 
     return this.undefinedVariableError(name)
