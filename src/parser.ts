@@ -152,6 +152,10 @@ export class Parser {
   }
 
   private statement(): Stmt.Stmt {
+    if (this.match(TokenType.IF)) {
+      return this.ifStatement()
+    }
+
     if (this.match(TokenType.PRINT)) {
       return this.printStatement()
     }
@@ -185,6 +189,17 @@ export class Parser {
     this.consume(TokenType.RIGHT_BRACE, "Expected '}' after block")
 
     return new Stmt.Block(statements)
+  }
+
+  private ifStatement(): Stmt.If {
+    this.consume(TokenType.LEFT_PAREN, "Expected '(' after 'if'")
+    const condition = this.expression()
+    this.consume(TokenType.RIGHT_PAREN, "Expected ')' after 'if' condition")
+
+    const thenBranch = this.statement()
+    const elseBranch = this.match(TokenType.ELSE) ? this.statement() : undefined
+
+    return new Stmt.If(condition, thenBranch, elseBranch)
   }
 
   private declaration(): Stmt.Stmt {

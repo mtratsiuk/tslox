@@ -51,7 +51,13 @@ const stmtNodesDef: NodesDef = [
   ["Expression", [Types.Expr, "expression"]],
   ["Print", [Types.Expr, "expression"]],
   ["Var", [Types.Variable, "variable"], [Types.Expr, "initializer?"]],
-  ["Block", [`${Types.Stmt}[]`, "statements"]]
+  ["Block", [`${Types.Stmt}[]`, "statements"]],
+  [
+    "If",
+    [Types.Expr, "condition"],
+    [Types.Stmt, "thenBranch"],
+    [Types.Stmt, "elseBranch?"]
+  ]
 ]
 
 const nodeDefs: Record<string, NodesDef> = {

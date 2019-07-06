@@ -65,6 +65,16 @@ export class Interpreter
     return this.execBlock(stmt.statements, new Environment(this.environment))
   }
 
+  visitIfStmt(stmt: Stmt.If): LoxValue {
+    if (isTruthy(this.eval(stmt.condition))) {
+      this.exec(stmt.thenBranch)
+    } else if (stmt.elseBranch) {
+      this.exec(stmt.elseBranch)
+    }
+
+    return null
+  }
+
   visitVariableExpr(expr: Expr.Variable): LoxValue {
     return this.environment.get(expr.name)
   }

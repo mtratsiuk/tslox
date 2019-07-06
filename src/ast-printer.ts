@@ -17,8 +17,10 @@ export class AstPrinter implements Expr.Visitor<string>, Stmt.Visitor<string> {
 
   private depth = -1
 
-  private parenthesize(name: string, ...exprs: Stmt.Stmt[]): string
-  private parenthesize(name: string, ...exprs: Expr.Expr[]): string
+  private parenthesize(
+    name: string,
+    ...exprs: (Stmt.Stmt | Expr.Expr)[]
+  ): string
 
   private parenthesize(name: string, ...exprs: any[]): string {
     this.depth += 1
@@ -56,12 +58,26 @@ export class AstPrinter implements Expr.Visitor<string>, Stmt.Visitor<string> {
     return this.parenthesize("block", ...stmt.statements)
   }
 
+  visitIfStmt(stmt: Stmt.If): string {
+    const statements = [stmt.thenBranch]
+
+    if (stmt.elseBranch) {
+      statements.push(stmt.elseBranch)
+    }
+
+    return this.parenthesize(
+      "if" + (stmt.elseBranch ? "Else" : ""),
+      stmt.condition,
+      ...statements
+    )
+  }
+
   visitBinaryExpr(expr: Expr.Binary): string {
     return this.parenthesize(expr.operator.lexeme, expr.left, expr.right)
   }
 
   visitTernaryExpr(expr: Expr.Ternary): string {
-    return this.parenthesize("if", expr.condition, expr.left, expr.right)
+    return this.parenthesize("ifElse", expr.condition, expr.left, expr.right)
   }
 
   visitGroupingExpr(expr: Expr.Grouping): string {

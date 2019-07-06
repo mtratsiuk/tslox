@@ -7,6 +7,7 @@ export interface Visitor<T> {
   visitPrintStmt(stmt: Print): T
   visitVarStmt(stmt: Var): T
   visitBlockStmt(stmt: Block): T
+  visitIfStmt(stmt: If): T
 }
 
 export interface Stmt {
@@ -42,5 +43,17 @@ export class Block implements Stmt {
 
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBlockStmt(this)
+  }
+}
+
+export class If implements Stmt {
+  constructor(
+    readonly condition: Expr,
+    readonly thenBranch: Stmt,
+    readonly elseBranch?: Stmt
+  ) {}
+
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitIfStmt(this)
   }
 }
