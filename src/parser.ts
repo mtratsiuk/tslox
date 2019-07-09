@@ -116,11 +116,24 @@ export class Parser {
     TokenType.EQUAL_EQUAL
   )
 
-  private ternary(): Expr.Expr {
+  private logical(): Expr.Expr {
     let expr = this.equality()
 
+    while (this.match(TokenType.OR, TokenType.AND)) {
+      const op = this.previous()
+      const right = this.equality()
+
+      expr = new Expr.Logical(expr, op, right)
+    }
+
+    return expr
+  }
+
+  private ternary(): Expr.Expr {
+    let expr = this.logical()
+
     if (this.match(TokenType.QUESTION)) {
-      const left = this.equality()
+      const left = this.logical()
       this.consume(TokenType.COLON, "Expected ':' in ternary expression")
       const right = this.ternary()
 

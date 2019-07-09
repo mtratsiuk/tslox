@@ -35,6 +35,12 @@ const exprNodesDef: NodesDef = [
     [Types.Expr, "right"]
   ],
   [
+    "Logical",
+    [Types.Expr, "left"],
+    [Types.Token, "operator"],
+    [Types.Expr, "right"]
+  ],
+  [
     "Ternary",
     [Types.Expr, "condition"],
     [Types.Expr, "left"],

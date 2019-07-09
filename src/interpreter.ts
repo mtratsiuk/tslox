@@ -105,6 +105,20 @@ export class Interpreter
     return this.eval(expr.right)
   }
 
+  visitLogicalExpr(expr: Expr.Logical): LoxValue {
+    const left = this.eval(expr.left)
+
+    if (expr.operator.type === TokenType.OR) {
+      if (isTruthy(left)) {
+        return left
+      }
+    } else if (!isTruthy(left)) {
+      return left
+    }
+
+    return this.eval(expr.right)
+  }
+
   visitGroupingExpr(expr: Expr.Grouping): LoxValue {
     return this.eval(expr.expression)
   }

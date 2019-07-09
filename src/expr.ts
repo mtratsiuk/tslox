@@ -4,6 +4,7 @@ import { Token, Literal as LiteralValue } from "./token"
 
 export interface Visitor<T> {
   visitBinaryExpr(expr: Binary): T
+  visitLogicalExpr(expr: Logical): T
   visitTernaryExpr(expr: Ternary): T
   visitGroupingExpr(expr: Grouping): T
   visitLiteralExpr(expr: Literal): T
@@ -25,6 +26,18 @@ export class Binary implements Expr {
 
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBinaryExpr(this)
+  }
+}
+
+export class Logical implements Expr {
+  constructor(
+    readonly left: Expr,
+    readonly operator: Token,
+    readonly right: Expr
+  ) {}
+
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitLogicalExpr(this)
   }
 }
 

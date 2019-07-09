@@ -76,6 +76,10 @@ export class AstPrinter implements Expr.Visitor<string>, Stmt.Visitor<string> {
     return this.parenthesize(expr.operator.lexeme, expr.left, expr.right)
   }
 
+  visitLogicalExpr(expr: Expr.Logical): string {
+    return this.parenthesize(expr.operator.lexeme, expr.left, expr.right)
+  }
+
   visitTernaryExpr(expr: Expr.Ternary): string {
     return this.parenthesize("ifElse", expr.condition, expr.left, expr.right)
   }
