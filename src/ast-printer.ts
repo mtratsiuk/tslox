@@ -72,6 +72,10 @@ export class AstPrinter implements Expr.Visitor<string>, Stmt.Visitor<string> {
     )
   }
 
+  visitWhileStmt(stmt: Stmt.While): string {
+    return this.parenthesize("while", stmt.condition, stmt.body)
+  }
+
   visitBinaryExpr(expr: Expr.Binary): string {
     return this.parenthesize(expr.operator.lexeme, expr.left, expr.right)
   }

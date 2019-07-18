@@ -75,6 +75,14 @@ export class Interpreter
     return null
   }
 
+  visitWhileStmt(stmt: Stmt.While): LoxValue {
+    while (isTruthy(this.eval(stmt.condition))) {
+      this.exec(stmt.body)
+    }
+
+    return null
+  }
+
   visitVariableExpr(expr: Expr.Variable): LoxValue {
     return this.environment.get(expr.name)
   }

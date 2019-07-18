@@ -8,6 +8,7 @@ export interface Visitor<T> {
   visitVarStmt(stmt: Var): T
   visitBlockStmt(stmt: Block): T
   visitIfStmt(stmt: If): T
+  visitWhileStmt(stmt: While): T
 }
 
 export interface Stmt {
@@ -55,5 +56,13 @@ export class If implements Stmt {
 
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitIfStmt(this)
+  }
+}
+
+export class While implements Stmt {
+  constructor(readonly condition: Expr, readonly body: Stmt) {}
+
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitWhileStmt(this)
   }
 }

@@ -169,6 +169,10 @@ export class Parser {
       return this.ifStatement()
     }
 
+    if (this.match(TokenType.WHILE)) {
+      return this.whileStatement()
+    }
+
     if (this.match(TokenType.PRINT)) {
       return this.printStatement()
     }
@@ -213,6 +217,16 @@ export class Parser {
     const elseBranch = this.match(TokenType.ELSE) ? this.statement() : undefined
 
     return new Stmt.If(condition, thenBranch, elseBranch)
+  }
+
+  private whileStatement(): Stmt.While {
+    this.consume(TokenType.LEFT_PAREN, "Expected '(' after 'while'")
+    const condition = this.expression()
+    this.consume(TokenType.RIGHT_PAREN, "Expected ')' after 'while' condition")
+
+    const body = this.statement()
+
+    return new Stmt.While(condition, body)
   }
 
   private declaration(): Stmt.Stmt {
