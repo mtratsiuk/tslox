@@ -173,6 +173,10 @@ export class Parser {
       return this.whileStatement()
     }
 
+    if (this.match(TokenType.FOR)) {
+      return this.forStatement()
+    }
+
     if (this.match(TokenType.PRINT)) {
       return this.printStatement()
     }
@@ -227,6 +231,52 @@ export class Parser {
     const body = this.statement()
 
     return new Stmt.While(condition, body)
+  }
+
+  private forStatement(): Stmt.Stmt {
+    this.consume(TokenType.LEFT_PAREN, "Expected '(' after 'for'")
+
+    let initializer
+
+    if (this.match(TokenType.SEMICOLON)) {
+      initializer = undefined
+    } else if (this.match(TokenType.VAR)) {
+      initializer = this.varDeclaration()
+    } else {
+      initializer = this.expressionStatement()
+    }
+
+    let condition
+
+    if (this.match(TokenType.SEMICOLON)) {
+      condition = new Expr.Literal(true)
+    } else {
+      condition = this.expression()
+      this.consume(TokenType.SEMICOLON, "Expected ';' after 'for' condition")
+    }
+
+    let increment
+
+    if (this.match(TokenType.RIGHT_PAREN)) {
+      increment = undefined
+    } else {
+      increment = this.expression()
+      this.consume(TokenType.RIGHT_PAREN, "Expected ')' after 'for' clauses")
+    }
+
+    let body = this.statement()
+
+    if (increment) {
+      body = new Stmt.Block([body, new Stmt.Expression(increment)])
+    }
+
+    body = new Stmt.While(condition, body)
+
+    if (initializer) {
+      body = new Stmt.Block([initializer, body])
+    }
+
+    return body
   }
 
   private declaration(): Stmt.Stmt {
