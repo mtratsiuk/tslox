@@ -14,6 +14,7 @@ export class Parser {
   private tokens: Token[]
   private current: number = 0
   private errors: ParseError[] = []
+  private context: Context = new Context()
 
   constructor(tokens: Token[]) {
     if (tokens.length === 0) {
@@ -177,6 +178,10 @@ export class Parser {
       return this.forStatement()
     }
 
+    if (this.match(TokenType.BREAK)) {
+      return this.breakStatement()
+    }
+
     if (this.match(TokenType.PRINT)) {
       return this.printStatement()
     }
@@ -196,7 +201,7 @@ export class Parser {
 
   private expressionStatement(): Stmt.Expression {
     const expr = this.expression()
-    this.consume(TokenType.SEMICOLON, "Expected ';' expression")
+    this.consume(TokenType.SEMICOLON, "Expected ';' after expression")
     return new Stmt.Expression(expr)
   }
 
@@ -228,7 +233,7 @@ export class Parser {
     const condition = this.expression()
     this.consume(TokenType.RIGHT_PAREN, "Expected ')' after 'while' condition")
 
-    const body = this.statement()
+    const body = this.withContext(ContextType.LOOP_BODY, () => this.statement())
 
     return new Stmt.While(condition, body)
   }
@@ -264,7 +269,7 @@ export class Parser {
       this.consume(TokenType.RIGHT_PAREN, "Expected ')' after 'for' clauses")
     }
 
-    let body = this.statement()
+    let body = this.withContext(ContextType.LOOP_BODY, () => this.statement())
 
     if (increment) {
       body = new Stmt.Block([body, new Stmt.Expression(increment)])
@@ -277,6 +282,19 @@ export class Parser {
     }
 
     return body
+  }
+
+  private breakStatement(): Stmt.Stmt {
+    if (!this.context.check(ContextType.LOOP_BODY)) {
+      throw new ParseError(
+        this.previous(),
+        "Unexpected 'break' statement outside of loop body"
+      )
+    }
+
+    this.consume(TokenType.SEMICOLON, "Expected ';' after 'break' statement")
+
+    return new Stmt.Break()
   }
 
   private declaration(): Stmt.Stmt {
@@ -295,6 +313,16 @@ export class Parser {
 
     this.consume(TokenType.SEMICOLON, "Expected ';' after variable declaration")
     return new Stmt.Var(new Expr.Variable(name), initializer)
+  }
+
+  private withContext<T>(type: ContextType, cb: () => T): T {
+    this.context.push(type)
+
+    try {
+      return cb()
+    } finally {
+      this.context.pop(type)
+    }
   }
 
   private synchronize(): void {
@@ -360,5 +388,39 @@ export class Parser {
 
   private isAtEnd(): boolean {
     return this.peek().type === TokenType.EOF
+  }
+}
+
+enum ContextType {
+  LOOP_BODY
+}
+
+export class Context {
+  private map: Map<ContextType, boolean[]> = new Map()
+
+  push(type: ContextType): void {
+    const ctx = this.map.get(type)
+
+    if (ctx) {
+      ctx.push(true)
+    } else {
+      this.map.set(type, [true])
+    }
+  }
+
+  pop(type: ContextType): void {
+    const ctx = this.map.get(type)
+
+    if (!ctx) {
+      throw new Error("Context was not entered")
+    }
+
+    ctx.pop()
+  }
+
+  check(type: ContextType): boolean {
+    const ctx = this.map.get(type)
+
+    return !!ctx && ctx.length > 0
   }
 }

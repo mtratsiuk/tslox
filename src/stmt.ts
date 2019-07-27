@@ -9,6 +9,7 @@ export interface Visitor<T> {
   visitBlockStmt(stmt: Block): T
   visitIfStmt(stmt: If): T
   visitWhileStmt(stmt: While): T
+  visitBreakStmt(stmt: Break): T
 }
 
 export interface Stmt {
@@ -64,5 +65,13 @@ export class While implements Stmt {
 
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitWhileStmt(this)
+  }
+}
+
+export class Break implements Stmt {
+  constructor() {}
+
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitBreakStmt(this)
   }
 }

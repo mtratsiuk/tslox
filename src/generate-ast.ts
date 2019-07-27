@@ -64,7 +64,8 @@ const stmtNodesDef: NodesDef = [
     [Types.Stmt, "thenBranch"],
     [Types.Stmt, "elseBranch?"]
   ],
-  ["While", [Types.Expr, "condition"], [Types.Stmt, "body"]]
+  ["While", [Types.Expr, "condition"], [Types.Stmt, "body"]],
+  ["Break"],
 ]
 
 const nodeDefs: Record<string, NodesDef> = {

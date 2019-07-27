@@ -20,6 +20,7 @@ export class Interpreter
   }
 
   private environment = new Environment()
+  private reachedBreakStmt: boolean = false
 
   interpret(statements: Stmt.Stmt[]): Result<LoxValue, RuntimeError> {
     try {
@@ -78,7 +79,18 @@ export class Interpreter
   visitWhileStmt(stmt: Stmt.While): LoxValue {
     while (isTruthy(this.eval(stmt.condition))) {
       this.exec(stmt.body)
+
+      if (this.reachedBreakStmt) {
+        this.reachedBreakStmt = false
+        break
+      }
     }
+
+    return null
+  }
+
+  visitBreakStmt(_stmt: Stmt.Break): LoxValue {
+    this.reachedBreakStmt = true
 
     return null
   }
@@ -154,7 +166,15 @@ export class Interpreter
     try {
       this.environment = environment
 
-      return this.exec(statements)
+      for (let stmt of statements) {
+        this.exec(stmt)
+
+        if (this.reachedBreakStmt) {
+          break
+        }
+      }
+
+      return null
     } finally {
       this.environment = previous
     }
