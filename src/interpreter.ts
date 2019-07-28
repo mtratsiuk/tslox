@@ -2,14 +2,24 @@ import * as Expr from "./expr"
 import * as Stmt from "./stmt"
 import { TokenType } from "./token-type"
 import { Literal, Token } from "./token"
-import { Result } from "./common"
+import { Result, CustomError } from "./common"
 import { Environment } from "./environment"
+import { globals } from "./globals"
+import { Callable, LoxFunction } from "./callable"
 
-export type LoxValue = Literal | object
+export type LoxValue = Literal | Callable
 
-export class RuntimeError extends Error {
+export class RuntimeError extends CustomError {
   constructor(public token: Token, public message: string) {
     super(message)
+  }
+}
+
+export class BreakSignal extends CustomError {}
+
+export class ReturnSignal extends CustomError {
+  constructor(readonly value: LoxValue) {
+    super("")
   }
 }
 
@@ -19,8 +29,7 @@ export class Interpreter
     return new Interpreter().interpret(statements)
   }
 
-  private environment = new Environment()
-  private reachedBreakStmt: boolean = false
+  private environment = globals
 
   interpret(statements: Stmt.Stmt[]): Result<LoxValue, RuntimeError> {
     try {
@@ -62,8 +71,16 @@ export class Interpreter
     return null
   }
 
+  visitFunctionStmt(stmt: Stmt.Function): LoxValue {
+    const fun = new LoxFunction(stmt, this.environment)
+
+    this.environment.define(stmt.name, fun)
+
+    return null
+  }
+
   visitBlockStmt(stmt: Stmt.Block): LoxValue {
-    return this.execBlock(stmt.statements, new Environment(this.environment))
+    return this.execBlock(stmt, new Environment(this.environment))
   }
 
   visitIfStmt(stmt: Stmt.If): LoxValue {
@@ -78,11 +95,14 @@ export class Interpreter
 
   visitWhileStmt(stmt: Stmt.While): LoxValue {
     while (isTruthy(this.eval(stmt.condition))) {
-      this.exec(stmt.body)
+      try {
+        this.exec(stmt.body)
+      } catch (error) {
+        if (error instanceof BreakSignal) {
+          break
+        }
 
-      if (this.reachedBreakStmt) {
-        this.reachedBreakStmt = false
-        break
+        throw error
       }
     }
 
@@ -90,9 +110,13 @@ export class Interpreter
   }
 
   visitBreakStmt(_stmt: Stmt.Break): LoxValue {
-    this.reachedBreakStmt = true
+    throw new BreakSignal()
+  }
 
-    return null
+  visitReturnStmt(stmt: Stmt.Return): LoxValue {
+    const value = stmt.value ? this.eval(stmt.value) : null
+
+    throw new ReturnSignal(value)
   }
 
   visitVariableExpr(expr: Expr.Variable): LoxValue {
@@ -157,22 +181,31 @@ export class Interpreter
     throw new Error()
   }
 
-  private execBlock(
-    statements: Stmt.Stmt[],
-    environment: Environment
-  ): LoxValue {
+  visitCallExpr(expr: Expr.Call): LoxValue {
+    const callee = this.eval(expr.callee)
+    const args = expr.args.map(a => this.eval(a))
+
+    if (!(callee instanceof Callable)) {
+      throw new RuntimeError(expr.paren, "Can only call functions and classes")
+    }
+
+    if (args.length !== callee.getArity()) {
+      throw new RuntimeError(
+        expr.paren,
+        `Expected ${callee.getArity()} arguments but got ${args.length}`
+      )
+    }
+
+    return callee.call(this, args)
+  }
+
+  execBlock(block: Stmt.Block, environment: Environment): LoxValue {
     const previous = this.environment
 
     try {
       this.environment = environment
 
-      for (let stmt of statements) {
-        this.exec(stmt)
-
-        if (this.reachedBreakStmt) {
-          break
-        }
-      }
+      this.exec(block.statements)
 
       return null
     } finally {

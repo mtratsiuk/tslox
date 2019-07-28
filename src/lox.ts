@@ -10,22 +10,42 @@ import * as Stmt from "./stmt"
 
 export function main(args: string[]): void {
   const filePath = args[2]
+  const debug = args[3]
 
   if (!filePath) {
     return runPrompt()
   }
 
-  runFile(filePath)
+  runFile(filePath, {
+    printAst: !!debug && debug.includes("ast"),
+    printTokens: !!debug && debug.includes("tokens")
+  })
 }
 
-function runFile(filePath: string): void {
+function runFile(
+  filePath: string,
+  options: { printTokens: boolean; printAst: boolean } = {
+    printTokens: false,
+    printAst: false
+  }
+): void {
   fs.readFile(filePath, "utf8", (error, source) => {
     if (error) {
       console.error(error)
       process.exit(1)
     }
 
-    process.exit(run(source))
+    process.exit(
+      run(source, undefined, ({ statements, tokens }) => {
+        if (options.printTokens && tokens) {
+          console.log(tokens)
+        }
+
+        if (options.printAst && statements) {
+          console.log(AstPrinter.print(statements))
+        }
+      })
+    )
   })
 }
 
@@ -67,29 +87,23 @@ enum ExitCode {
 function run(
   source: string,
   ctx: { interpreter?: Interpreter } = {},
-  callback?: (arg: {
+  callback: (arg: {
     tokens?: Token[]
     statements?: Stmt.Stmt[]
     result?: LoxValue
-  }) => void
+  }) => void = () => {}
 ): ExitCode {
   return Scanner.scan(source).match({
     ok: tokens => {
-      if (callback) {
-        callback({ tokens })
-      }
+      callback({ tokens })
 
       return Parser.parse(tokens).match({
         ok: statements => {
-          if (callback) {
-            callback({ statements })
-          }
+          callback({ statements })
 
           return (ctx.interpreter || Interpreter).interpret(statements).match({
             ok: result => {
-              if (callback) {
-                callback({ result })
-              }
+              callback({ result })
 
               return ExitCode.Ok
             },

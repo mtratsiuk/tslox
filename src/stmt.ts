@@ -1,6 +1,7 @@
 // Generated code
 
 import { Expr, Variable } from "./expr"
+import { Token } from "./token"
 
 export interface Visitor<T> {
   visitExpressionStmt(stmt: Expression): T
@@ -10,6 +11,8 @@ export interface Visitor<T> {
   visitIfStmt(stmt: If): T
   visitWhileStmt(stmt: While): T
   visitBreakStmt(stmt: Break): T
+  visitFunctionStmt(stmt: Function): T
+  visitReturnStmt(stmt: Return): T
 }
 
 export interface Stmt {
@@ -73,5 +76,25 @@ export class Break implements Stmt {
 
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitBreakStmt(this)
+  }
+}
+
+export class Function implements Stmt {
+  constructor(
+    readonly name: Token,
+    readonly params: Token[],
+    readonly body: Block
+  ) {}
+
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitFunctionStmt(this)
+  }
+}
+
+export class Return implements Stmt {
+  constructor(readonly keyword: Token, readonly value?: Expr) {}
+
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitReturnStmt(this)
   }
 }

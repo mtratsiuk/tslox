@@ -6,8 +6,8 @@ export class Environment {
 
   constructor(private readonly enclosing?: Environment) {}
 
-  define(name: Token, value: LoxValue): void {
-    this.values.set(name.lexeme, value)
+  define(name: Token | string, value: LoxValue): void {
+    this.values.set(name instanceof Token ? name.lexeme : name, value)
   }
 
   assign(name: Token, value: LoxValue): void {

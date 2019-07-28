@@ -54,6 +54,15 @@ export class AstPrinter implements Expr.Visitor<string>, Stmt.Visitor<string> {
     return this.parenthesize("define", ...exprs)
   }
 
+  visitFunctionStmt(stmt: Stmt.Function): string {
+    return this.parenthesize(
+      `define (${stmt.name.lexeme} ${stmt.params
+        .map(p => p.lexeme)
+        .join(" ")})`,
+      stmt.body
+    )
+  }
+
   visitBlockStmt(stmt: Stmt.Block): string {
     return this.parenthesize("block", ...stmt.statements)
   }
@@ -78,6 +87,16 @@ export class AstPrinter implements Expr.Visitor<string>, Stmt.Visitor<string> {
 
   visitBreakStmt(_stmt: Stmt.Break): string {
     return this.parenthesize("break")
+  }
+
+  visitReturnStmt(stmt: Stmt.Return): string {
+    const exprs: Expr.Expr[] = []
+
+    if (stmt.value) {
+      exprs.push(stmt.value)
+    }
+
+    return this.parenthesize("return", ...exprs)
   }
 
   visitBinaryExpr(expr: Expr.Binary): string {
@@ -118,5 +137,9 @@ export class AstPrinter implements Expr.Visitor<string>, Stmt.Visitor<string> {
 
   visitAssignExpr(expr: Expr.Assign): string {
     return this.parenthesize("set", expr.variable, expr.value)
+  }
+
+  visitCallExpr(expr: Expr.Call): string {
+    return this.parenthesize(expr.callee.accept(this), ...expr.args)
   }
 }

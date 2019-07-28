@@ -4,6 +4,9 @@ import { Result } from "./common"
 import * as Expr from "./expr"
 import * as Stmt from "./stmt"
 
+const MAX_ARGUMENTS_COUNT = 255
+const MAX_PARAMETERS_COUNT = 8
+
 export class ParseError extends Error {
   constructor(public token: Token, public message: string) {
     super(message)
@@ -83,12 +86,44 @@ export class Parser {
     return new Expr.Grouping(expr)
   }
 
+  private call(): Expr.Expr {
+    let expr = this.primary()
+
+    while (this.match(TokenType.LEFT_PAREN)) {
+      const args: Expr.Expr[] = []
+
+      if (!this.check(TokenType.RIGHT_PAREN)) {
+        do {
+          if (args.length >= MAX_ARGUMENTS_COUNT) {
+            this.errors.push(
+              new ParseError(
+                this.peek(),
+                `Cannot have more than ${MAX_ARGUMENTS_COUNT} arguments`
+              )
+            )
+          }
+
+          args.push(this.expression())
+        } while (this.match(TokenType.COMMA))
+      }
+
+      const paren = this.consume(
+        TokenType.RIGHT_PAREN,
+        "Expected ')' after arguments"
+      )
+
+      expr = new Expr.Call(expr, paren, args)
+    }
+
+    return expr
+  }
+
   private unary: () => Expr.Expr = () => {
     if (this.match(TokenType.BANG, TokenType.MINUS)) {
       return new Expr.Unary(this.previous(), this.unary())
     }
 
-    return this.primary()
+    return this.call()
   }
 
   private multiplication = this.binary(
@@ -180,6 +215,10 @@ export class Parser {
 
     if (this.match(TokenType.BREAK)) {
       return this.breakStatement()
+    }
+
+    if (this.match(TokenType.RETURN)) {
+      return this.returnStatement()
     }
 
     if (this.match(TokenType.PRINT)) {
@@ -297,9 +336,23 @@ export class Parser {
     return new Stmt.Break()
   }
 
+  private returnStatement(): Stmt.Stmt {
+    const value = this.check(TokenType.SEMICOLON)
+      ? undefined
+      : this.expression()
+
+    this.consume(TokenType.SEMICOLON, "Expected ';' after 'return' statement")
+
+    return new Stmt.Return(this.previous(), value)
+  }
+
   private declaration(): Stmt.Stmt {
     if (this.match(TokenType.VAR)) {
       return this.varDeclaration()
+    }
+
+    if (this.match(TokenType.FUN)) {
+      return this.function("function")
     }
 
     return this.statement()
@@ -313,6 +366,37 @@ export class Parser {
 
     this.consume(TokenType.SEMICOLON, "Expected ';' after variable declaration")
     return new Stmt.Var(new Expr.Variable(name), initializer)
+  }
+
+  private function(kind: string): Stmt.Stmt {
+    const name = this.consume(TokenType.IDENTIFIER, `Expected ${kind} name`)
+    const params = []
+
+    this.consume(TokenType.LEFT_PAREN, `Expected '(' after ${kind} name`)
+
+    if (!this.check(TokenType.RIGHT_PAREN)) {
+      do {
+        if (params.length >= MAX_PARAMETERS_COUNT) {
+          this.errors.push(
+            new ParseError(
+              this.peek(),
+              `Cannot have more than ${MAX_PARAMETERS_COUNT} parameters`
+            )
+          )
+        }
+
+        params.push(
+          this.consume(TokenType.IDENTIFIER, "Expected parameter name")
+        )
+      } while (this.match(TokenType.COMMA))
+    }
+
+    this.consume(TokenType.RIGHT_PAREN, "Expected ')' after parameters")
+    this.consume(TokenType.LEFT_BRACE, `Expected '{' before ${kind} body`)
+
+    const body = this.blockStatement()
+
+    return new Stmt.Function(name, params, body)
   }
 
   private withContext<T>(type: ContextType, cb: () => T): T {

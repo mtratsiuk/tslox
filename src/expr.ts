@@ -11,6 +11,7 @@ export interface Visitor<T> {
   visitUnaryExpr(expr: Unary): T
   visitVariableExpr(expr: Variable): T
   visitAssignExpr(expr: Assign): T
+  visitCallExpr(expr: Call): T
 }
 
 export interface Expr {
@@ -90,5 +91,17 @@ export class Assign implements Expr {
 
   accept<T>(visitor: Visitor<T>): T {
     return visitor.visitAssignExpr(this)
+  }
+}
+
+export class Call implements Expr {
+  constructor(
+    readonly callee: Expr,
+    readonly paren: Token,
+    readonly args: Expr[]
+  ) {}
+
+  accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitCallExpr(this)
   }
 }

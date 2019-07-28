@@ -29,4 +29,5 @@ export class RpnPrinter implements Expr.Visitor<string> {
   visitVariableExpr = notImplemented
   visitAssignExpr = notImplemented
   visitLogicalExpr = notImplemented
+  visitCallExpr = notImplemented
 }

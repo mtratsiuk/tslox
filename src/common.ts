@@ -37,3 +37,10 @@ class Fail<T, E> extends Result<T, E> {
 export function notImplemented(): never {
   throw new Error("Not implemented")
 }
+
+export class CustomError extends Error {
+  constructor(message?: string) {
+    super(message)
+    Object.setPrototypeOf(this, new.target.prototype)
+  }
+}
