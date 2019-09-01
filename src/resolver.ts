@@ -58,7 +58,7 @@ export class Resolver implements Expr.Visitor<void>, Stmt.Visitor<void> {
       this.define(param)
     })
 
-    this.resolve(stmt.body)
+    this.resolve(stmt.body.statements)
 
     this.endScope()
   }

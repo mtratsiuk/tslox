@@ -42,7 +42,7 @@ export class Environment {
   }
 
   getAt(distance: number, name: Token): LoxValue {
-    return this.ancestor(distance).get(name)
+    return this.ancestor(distance).values.get(name.lexeme)!
   }
 
   private ancestor(distance: number): Environment {
