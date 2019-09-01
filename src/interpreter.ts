@@ -30,6 +30,7 @@ export class Interpreter
   }
 
   private environment = globals
+  private locals = new Map<Expr.Expr, number>()
 
   interpret(statements: Stmt.Stmt[]): Result<LoxValue, RuntimeError> {
     try {
@@ -52,6 +53,10 @@ export class Interpreter
 
   eval(expr: Expr.Expr): LoxValue {
     return expr.accept(this)
+  }
+
+  resolve(expr: Expr.Expr, depth: number): void {
+    this.locals.set(expr, depth)
   }
 
   visitExpressionStmt(stmt: Stmt.Expression): LoxValue {
@@ -120,11 +125,18 @@ export class Interpreter
   }
 
   visitVariableExpr(expr: Expr.Variable): LoxValue {
-    return this.environment.get(expr.name)
+    return this.lookUpVariable(expr.name, expr)
   }
 
   visitAssignExpr(expr: Expr.Assign): LoxValue {
     const value = this.eval(expr.value)
+    const distance = this.locals.get(expr)
+
+    if (distance !== undefined) {
+      this.environment.assignAt(distance, expr.variable.name, value)
+    } else {
+      globals.assign(expr.variable.name, value)
+    }
 
     this.environment.assign(expr.variable.name, value)
 
@@ -210,6 +222,16 @@ export class Interpreter
       return null
     } finally {
       this.environment = previous
+    }
+  }
+
+  lookUpVariable(name: Token, expr: Expr.Expr): LoxValue {
+    const distance = this.locals.get(expr)
+
+    if (distance !== undefined) {
+      return this.environment.getAt(distance, name)
+    } else {
+      return globals.get(name)
     }
   }
 }

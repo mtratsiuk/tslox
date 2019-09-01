@@ -4,6 +4,7 @@ import * as readline from "readline"
 import { Scanner } from "./scanner"
 import { Parser } from "./parser"
 import { Interpreter, stringify, LoxValue } from "./interpreter"
+import { Resolver } from "./resolver"
 import { AstPrinter } from "./ast-printer"
 import { Token } from "./token"
 import * as Stmt from "./stmt"
@@ -86,7 +87,7 @@ enum ExitCode {
 
 function run(
   source: string,
-  ctx: { interpreter?: Interpreter } = {},
+  ctx: { interpreter: Interpreter } = { interpreter: new Interpreter() },
   callback: (arg: {
     tokens?: Token[]
     statements?: Stmt.Stmt[]
@@ -101,19 +102,32 @@ function run(
         ok: statements => {
           callback({ statements })
 
-          return (ctx.interpreter || Interpreter).interpret(statements).match({
-            ok: result => {
-              callback({ result })
+          return Resolver.resolve({
+            interpreter: ctx.interpreter,
+            statements
+          }).match({
+            ok: () => {
+              return ctx.interpreter.interpret(statements).match({
+                ok: result => {
+                  callback({ result })
 
-              return ExitCode.Ok
+                  return ExitCode.Ok
+                },
+                fail: error => {
+                  report(
+                    error.token.line,
+                    `at "${error.token.lexeme}"`,
+                    error.message
+                  )
+                  return ExitCode.RuntimeError
+                }
+              })
             },
-            fail: error => {
-              report(
-                error.token.line,
-                `at "${error.token.lexeme}"`,
-                error.message
+            fail: errors => {
+              errors.forEach(({ token, message }) =>
+                report(token.line, `at "${token.lexeme}"`, message)
               )
-              return ExitCode.RuntimeError
+              return ExitCode.FormatError
             }
           })
         },

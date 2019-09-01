@@ -23,6 +23,10 @@ export class Environment {
     return this.undefinedVariableError(name)
   }
 
+  assignAt(distance: number, name: Token, value: LoxValue): void {
+    this.ancestor(distance).values.set(name.lexeme, value)
+  }
+
   get(name: Token): LoxValue {
     const value = this.values.get(name.lexeme)
 
@@ -35,6 +39,24 @@ export class Environment {
     }
 
     return this.undefinedVariableError(name)
+  }
+
+  getAt(distance: number, name: Token): LoxValue {
+    return this.ancestor(distance).get(name)
+  }
+
+  private ancestor(distance: number): Environment {
+    let environment: Environment = this
+
+    for (let i = 0; i < distance; i += 1) {
+      if (!environment.enclosing) {
+        throw new Error()
+      }
+
+      environment = environment.enclosing
+    }
+
+    return environment
   }
 
   private undefinedVariableError(name: Token): never {
